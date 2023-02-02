@@ -8,6 +8,14 @@
 
 	<!--YOUR OWN JAVASCRIPT CAN GO RIGHT HERE-->
 	<script type="text/javascript">
+
+        //add the lockout functionality by adding a variable to keep
+        //track of the number of attempts and comparing it to a maximum
+        //number of allowed attempts. If the number of attempts is equal
+        //to the maximum, you can prevent the user from logging in.
+        var attempts = 0;
+        var maxAttempts = 5;
+
 		function TestButtonHandler() {
 			var webMethod = "ProjectServices.asmx/TestConnection";
 			var parameters = "{}";
@@ -30,6 +38,11 @@
 		}
 
 		function logon() {
+            //lockout on 5 incorrect passwords
+            if (attempts >= maxAttempts) {
+                alert("You have reached the maximum number of attempts. Account is locked.");
+                return;
+            }
 			var id = document.getElementById("logonId").value;
 			var pass = document.getElementById("logonPass").value;
 
@@ -48,10 +61,12 @@
 					var responseFromServer = msg.d;
 					if (responseFromServer == true) {
 						alert("logged in!");
+                        attempts = 0;
 					}
 					else {
-						alert("bad credentials");
-					}
+						attempts++;
+                        alert("bad credentials. Attempts remaining: " + (maxAttempts - attempts));
+                    }
 
 				},
 				error: function (e) {
@@ -59,20 +74,99 @@
 				}
 			});
 		}
+        function resetPassword() {
+            var email = prompt("Enter your email address to reset your password:");
+            if (!email) return; // user clicked cancel
+
+            //This line of code is a regular expression pattern that defines the format of a valid email address.
+            //The pattern uses the /^ and $ / symbols to specify that the entire string must match the pattern.
+            //In the pattern, [a - zA - Z0 -9._ -] matches a sequence of characters that can be any combination of letters(upper or lowercase),
+            //numbers, dots, underscores, and dashes.This forms the first part of the email address before the @symbol.
+            //The @symbol itself is matched by the @character in the pattern.
+            //After the @symbol, [a - zA - Z0 - 9. -] + matches another sequence of characters that can be any combination of letters(upper or lowercase),
+            //numbers, dots, and dashes, but there must be at least one character.This forms the second part of the email address, which is usually the domain name.
+            //Finally, \.[a - zA - Z]{ 2,} matches a dot followed by two or more letters, which is commonly used to specify the top - level domain(e.g. .com, .org, .net).
+            var emailRegExp = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+            // Check if the entered email is valid
+            if (!emailRegExp.test(email)) {
+                alert("Invalid email address. Please try again.");
+                return;
+            }
+
+            // send the email to reset password
+            var webMethod = "ProjectServices.asmx/ResetPassword";
+            var parameters = "{\"email\":\"" + encodeURI(email) + "\"}";
+
+            //jQuery ajax method
+            $.ajax({
+                type: "POST",
+                url: webMethod,
+                data: parameters,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    var responseFromServer = msg.d;
+                    if (responseFromServer === "Success") {
+                        alert("Password reset email sent successfully!");
+                    } else {
+                        alert("Password reset failed. Please try again later.");
+                    }
+                },
+                error: function (e) {
+                    alert("this code will only execute if javascript is unable to access the webservice");
+                }
+            });
+        }
 	
 	</script>
 	<!--END OF YOUR OWN JAVASCRIPT-->
 
 	<!--AND YOUR OWN CSS CAN GO HERE AS WELL-->
 	<style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f2f2f2;
+            height: 100vh;
+        }
 
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            margin: 10px;
+            padding: 10px;
+            width: 300px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
 	</style>
 	<!--END OF YOUR OWN CSS-->
 </head >
 <body>
-	<button onclick="javascript: TestButtonHandler();">Click here to test connection!</button>
-	<br />
-	<input type="text" id="logonId" /><input type="text" id="logonPass" /><button onclick="javascript: logon();" >Log On!</button>
+    <button onclick="javascript: TestButtonHandler();">Click here to test connection!</button>
+    <br />
+    <label for="username">Username: </label>
+    <input type="text" id="logonId" placeholder="Enter username" />
+    <br />
+    <label for="password">Password: </label>
+    <input type="text" id="logonPass" placeholder="Enter password" />
+    <br />
+    <button onclick="javascript: logon();">Log On!</button>
+    <br />
+    <button onclick="resetPassword()">Reset Password</button>
 
 </body>
 </html >
