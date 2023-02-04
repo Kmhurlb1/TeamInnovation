@@ -76,7 +76,7 @@ namespace ProjectTemplate
 			//our connection string comes from our web.config file like we talked about earlier
 			string sqlConnectString = getConString();
             //here's our query.  A basic select with nothing fancy.  Note the parameters that begin with @
-            string sqlSelect = "SELECT id FROM accounts WHERE userid=@idValue and pass=@passValue";
+            string sqlSelect = "SELECT user_id FROM accounts WHERE user_id=@idValue and password=@passValue";
 
             //set up our connection object to be ready to use our connection string
             MySqlConnection sqlConnection = new MySqlConnection(sqlConnectString);
